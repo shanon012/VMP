@@ -232,7 +232,7 @@ export default function Assets() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="h-full">
+              <div className="h-screen">
                 <AgGridReact
                   rowData={rowData}
                   columnDefs={colDefs}
@@ -249,7 +249,7 @@ export default function Assets() {
               <CardDescription>서버 유형의 자산 목록입니다.</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="h-full">
+              <div className="h-screen">
                 <AgGridReact
                   rowData={rowData.filter((asset) => asset.type === "서버")}
                   columnDefs={colDefs}
@@ -276,7 +276,7 @@ export default function Assets() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="h-full">
+              <div className="h-screen">
                 <AgGridReact
                   rowData={rowData.filter((asset) => asset.type === "네트워크")}
                   columnDefs={colDefs}
