@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Outlet } from "react-router-dom";
+import { Outlet, Link } from "react-router-dom";
 import { DashboardNav } from "../components/dashboard-nav";
 import { UserNav } from "../components/user-nav";
 import { ModeToggle } from "../components/mode-toggle";
@@ -31,9 +31,9 @@ export default function MainLayout() {
                 </div>
               </SheetContent>
             </Sheet>
-            <a href="/dashboard" className="flex items-center gap-2">
+            <Link to="/dashboard" className="flex items-center gap-2">
               <span className="font-bold">취약점 관리 포털</span>
-            </a>
+            </Link>
           </div>
           <div className="flex items-center gap-4">
             <form className="hidden lg:block">
