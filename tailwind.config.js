@@ -1,18 +1,22 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: ["./src/**/*.{js,jsx,ts,tsx}", "./index.html", "*.{js,ts,jsx,tsx,mdx}"],
+  content: [
+    "./src/**/*.{js,jsx,ts,tsx}",
+    "./index.html",
+    "*.{js,ts,jsx,tsx,mdx}",
+  ],
   darkMode: "class",
   theme: {
     container: {
       center: true,
       padding: "2rem",
       screens: {
-        "2xl": "1600px",
+        "2xl": "1920px",
       },
     },
     extend: {
       zIndex: {
-        1: "1"
+        1: "1",
       },
       colors: {
         border: "hsl(var(--border))",
@@ -79,4 +83,4 @@ module.exports = {
     },
   },
   plugins: [require("tailwindcss-animate")],
-}
+};
