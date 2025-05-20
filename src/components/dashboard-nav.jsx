@@ -89,6 +89,39 @@ export function DashboardNav({ className, ...props }) {
       icon: Users,
     },
     {
+      name: "사용자 관리1",
+      href: "/users1",
+      icon: Users,
+    },
+    {
+      name: "사용자 관리2",
+      href: "/users2",
+      icon: Users,
+    },
+    {
+      name: "사용자 관리2",
+      href: "/users2",
+      icon: Users,
+    },
+    {
+      name: "사용자 관리2",
+      href: "/users2",
+      icon: Users,
+    },
+    {
+      name: "사용자 관리2",
+      href: "/users2",
+      icon: Users,
+    },
+    {
+      name: "사용자 관리2",
+      href: "/users2",
+      icon: Users,
+    },
+  ];
+
+  const bottomItems = [
+    {
       name: "환경설정",
       href: "/settings",
       icon: Settings,
@@ -103,45 +136,76 @@ export function DashboardNav({ className, ...props }) {
   return (
     <nav
       className={cn(
-        "flex-col space-x-2 lg:flex-col lg:space-x-0 lg:space-y-1",
+        "flex flex-col overflow-hidden",
+        "space-x-2 lg:space-x-0 lg:space-y-1",
         className
       )}
       {...props}
     >
-      {items.map((item) => (
-        <div key={item.href}>
-          <Link
-            to={item.href}
-            className={cn(
-              "group flex items-center rounded-md px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground",
-              isActive(item.href)
-                ? "bg-accent text-accent-foreground"
-                : "transparent"
-            )}
-          >
-            <item.icon className="mr-2 h-4 w-4" />
-            <span>{item.name}</span>
-          </Link>
-          {item.children && (
-            <div className="ml-6 mt-1 space-y-1">
-              {item.children.map((child) => (
-                <Link
-                  key={child.href}
-                  to={child.href}
-                  className={cn(
-                    "group flex items-center rounded-md px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground",
-                    isActive(child.href)
-                      ? "bg-accent text-accent-foreground"
-                      : "transparent"
-                  )}
-                >
-                  <span>{child.name}</span>
-                </Link>
-              ))}
+      <div className="flex-1 overflow-y-auto px-0 py-2">
+        {items.map((item) => {
+          // 자식이 있으면 부모 클릭 시 첫번째 자식으로 보낸다
+          const to = item.children?.[0]?.href ?? item.href;
+
+          return (
+            <div key={item.href}>
+              <Link
+                to={to}
+                className={cn(
+                  "group flex items-center rounded-md px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground",
+                  // 부모 활성 여부 ("/requests"면 "/requests/list"나 "/requests/new" 전부 포함)
+                  isActive(item.href)
+                    ? "bg-accent text-accent-foreground"
+                    : "transparent"
+                )}
+              >
+                <item.icon className="mr-2 h-4 w-4" />
+                <span>{item.name}</span>
+              </Link>
+              {item.children && (
+                <div className="ml-6 mt-1 space-y-1">
+                  {item.children.map((child) => (
+                    <Link
+                      key={child.href}
+                      to={child.href}
+                      className={cn(
+                        "group flex items-center rounded-md px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground",
+                        // 자식 활성 여부
+                        isActive(child.href)
+                          ? "bg-accent text-accent-foreground"
+                          : "transparent"
+                      )}
+                    >
+                      <span>{child.name}</span>
+                    </Link>
+                  ))}
+                </div>
+              )}
             </div>
-          )}
+          );
+        })}
+      </div>
+
+      <div className="flex-shrink-0 sticky bottom-0 border-t border-gray-200 dark:border-[#1F1F23]">
+        <div className="space-y-1">
+          {bottomItems.map((bottom) => (
+            <Link
+              key={bottom.href}
+              to={bottom.href}
+              className={cn(
+                "group flex items-center rounded-md px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground",
+                // 자식 활성 여부
+                isActive(bottom.href)
+                  ? "bg-accent text-accent-foreground"
+                  : "transparent"
+              )}
+            >
+              <bottom.icon className="mr-2 h-4 w-4" />
+              <span>{bottom.name}</span>
+            </Link>
+          ))}
         </div>
-      ))}
+      </div>
     </nav>
   );
 }

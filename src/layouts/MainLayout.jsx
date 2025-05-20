@@ -32,7 +32,7 @@ export default function MainLayout() {
               </SheetContent>
             </Sheet>
             <Link to="/dashboard" className="flex items-center gap-2">
-              <span className="font-bold">취약점 관리 포털</span>
+              <span className="text-2xl font-bold">취약점 관리 포털</span>
             </Link>
           </div>
           <div className="flex items-center gap-4">
@@ -50,8 +50,8 @@ export default function MainLayout() {
         </div>
       </header>
       <div className="container flex-1 items-start md:grid md:grid-cols-[220px_minmax(0,1fr)] lg:grid-cols-[280px_minmax(0,1fr)]">
-        <aside className="fixed top-16 z-30 hidden h-[calc(100vh-4rem)] w-full shrink-0 overflow-y-auto border-r border-[hsl(var(--border))] md:sticky md:block">
-          <div className="py-6 pr-6">
+        <aside className="fixed top-16 z-30 hidden h-[calc(100vh-4rem)] w-full shrink-0 border-r border-[hsl(var(--border))] md:sticky md:block">
+          <div className="h-full flex flex-col overflow-hidden py-6 pr-6">
             <DashboardNav />
           </div>
         </aside>

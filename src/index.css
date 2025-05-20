@@ -46,6 +46,11 @@
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 224.3 76.3% 48%;
+    --ag-background-color: #1f2836;
+    --ag-foreground-color: #ffffff;
+    --ag-spacing: 4px;
+    /* use dark scrollbars */
+    --ag-browser-/color-sc/eme: dark;
   }
 }
 
@@ -60,6 +65,50 @@
 }
 
 @layer components {
+  .custom-selected-cell {
+    background-color: #d0e9ff !important;
+    border: 1px solid #007aff !important;
+  }
+  
+  .range-selected {
+    background-color: #cbe8ff !important;
+    border: 1px solid #007aff !important;
+  }
+
+  .custom-context-menu {
+    position: fixed;
+    z-index: 10000;
+    background: #fff;
+    border: 1px solid #ccc;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    padding: 4px 0;
+    margin: 0;
+    list-style: none;
+    min-width: 160px;
+    font-size: 12px;
+    border-radius: 4px;
+  }
+  
+  .custom-context-menu li {
+    display: flex;
+    align-items: center;
+    padding: 6px 12px;
+    cursor: pointer;
+  }
+  
+  .custom-context-menu li.disabled {
+    color: #999;
+    cursor: default;
+  }
+  
+  .custom-context-menu li:hover:not(.disabled) {
+    background-color: #f5f5f5;
+  }
+  
+  .custom-context-menu .icon {
+    margin-right: 8px;
+    display: inline-flex;
+  }
   /* 탭 스타일 */
   .tabs-list {
     @apply inline-flex h-10 items-center justify-center rounded-md bg-muted p-1 text-muted-foreground;

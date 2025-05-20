@@ -48,14 +48,6 @@ import {
   themeBalham,
 } from "ag-grid-community";
 import { AgGridReact } from "ag-grid-react";
-import {
-  handleCopyAll,
-  copySelection,
-  pasteSelection,
-  undoSelection,
-} from "../lib/agGridUtils";
-import { useGridSelection } from "@/hooks/use-GridSelection";
-import { actionButton } from "../components/actionButton";
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
@@ -72,7 +64,7 @@ export default function Assets() {
     { field: "department" },
     { field: "status" },
     { field: "lastScan" },
-    { field: "action", headerName: "작업", cellRenderer: actionButton },
+    { field: "action" },
   ]);
 
   const [rowData, setRowData] = useState([
@@ -139,27 +131,180 @@ export default function Assets() {
     };
   }, []);
 
-  // const [range, setRange] = useState(null);
-  // const [dragging, setDragging] = useState(false);
+  const [range, setRange] = useState(null);
+  const [dragging, setDragging] = useState(false);
 
-  const {
-    range,
-    setDragging,
-    onCellClicked,
-    onCellMouseDown,
-    onCellMouseOver,
-    getCellClassRules,
-    handleContextMenu,
-    ContextMenuComponent,
-  } = useGridSelection(colDefs, gridRef);
+  const onCellClicked = (params) => {
+    const { rowIndex, colDef, event } = params;
+    const field = colDef.field;
+
+    const colIndex = colDefs.findIndex((c) => c.field === field);
+
+    if (event.shiftKey) {
+      // Shift 누르고 클릭 -> 끝 지점 저장해서 범위 계산
+      if (!range?.start) return; // 시작 셀이 없으면 무시
+
+      setRange((prev) => ({
+        ...prev,
+        end: { rowIndex, colIndex },
+      }));
+    } else {
+      // 첫 셀 선택 (Shift 안 누른 경우 -> 시작 지점만 저장)
+      setRange({ start: { rowIndex, colIndex }, end: null });
+    }
+  };
 
   const defaultColDef = useMemo(() => {
     return {
       flex: 1,
       editable: true,
-      cellClassRules: getCellClassRules(),
+      cellClassRules: {
+        "range-selected": (params) => {
+          if (!range?.start || !range?.end) return false;
+
+          const row = params.rowIndex;
+          const colIndex = colDefs.findIndex(
+            (col) => col.field === params.colDef.field
+          );
+
+          const startRow = Math.min(range.start.rowIndex, range.end.rowIndex);
+          const endRow = Math.max(range.start.rowIndex, range.end.rowIndex);
+
+          const startCol = Math.min(range.start.colIndex, range.end.colIndex);
+          const endCol = Math.max(range.start.colIndex, range.end.colIndex);
+
+          return (
+            row >= startRow &&
+            row <= endRow &&
+            colIndex >= startCol &&
+            colIndex <= endCol
+          );
+        },
+      },
     };
   }, [range, colDefs]);
+
+  // 마우스 드래그 시작: 시작 포인트 저장
+  const onCellMouseDown = (params) => {
+    const { rowIndex, colDef, event } = params;
+    const colIndex = colDefs.findIndex((c) => c.field === colDef.field);
+    setDragging(true);
+    if (!event.shiftKey) {
+      setRange({ start: { rowIndex, colIndex }, end: null });
+    }
+  };
+
+  // 마우스 드래그 중: 이동 중인 포인트 저장
+  const onCellMouseOver = (params) => {
+    if (!dragging || !range?.start) return;
+
+    const { rowIndex, colDef } = params;
+    const colIndex = colDefs.findIndex((c) => c.field === colDef.field);
+
+    setRange((prev) => ({
+      ...prev,
+      end: { rowIndex, colIndex },
+    }));
+  };
+
+  // 마우스 드래그 종료: 드래그 플래그 변경
+  const onMouseUp = () => {
+    setDragging(false);
+  };
+
+  const handleCopyRange = () => {
+    if (!range?.start || !range?.end) return;
+
+    const startRow = Math.min(range.start.rowIndex, range.end.rowIndex);
+    const endRow = Math.max(range.start.rowIndex, range.end.rowIndex);
+
+    const startCol = Math.min(range.start.colIndex, range.end.colIndex);
+    const endCol = Math.max(range.start.colIndex, range.end.colIndex);
+
+    const selectedFields = colDefs
+      .slice(startCol, endCol + 1)
+      .map((col) => col.field);
+
+    let copied = "";
+    for (let i = startRow; i <= endRow; i++) {
+      const rowNode = gridRef.current.api.getDisplayedRowAtIndex(i);
+      const rowData = selectedFields
+        .map((field) => rowNode.data[field])
+        .join("\t");
+      copied += rowData + "\n";
+    }
+
+    navigator.clipboard.writeText(copied.trim());
+  };
+
+  const handleCopyAll = () => {
+    console.log(gridRef.current.api);
+    const rowData = [];
+    gridRef.current.api.forEachNode((node) => {
+      rowData.push(Object.values(node.data).join("\t")); // 탭으로 구분
+    });
+    const textToCopy = rowData.join("\n");
+    navigator.clipboard.writeText(textToCopy);
+  };
+
+  const handleCopyCell = () => {
+    const cell = gridRef.current.api.getFocusedCell(); // 포커싱된 셀 위치 가져오기
+    if (!cell) return;
+
+    const { rowIndex, column } = cell;
+    const colId = column.getColId();
+
+    const rowNode = gridRef.current.api.getDisplayedRowAtIndex(rowIndex);
+    const value = rowNode?.data?.[colId];
+
+    if (value !== undefined) {
+      navigator.clipboard.writeText(String(value));
+    }
+  };
+
+  const handleCopyRows = () => {
+    const selectedNodes = gridRef.current.api.getSelectedNodes();
+    const selectedData = selectedNodes.map((node) => node.data);
+
+    if (selectedData.length === 0) return;
+
+    const headers = colDefs.map((col) => col.field).join("\t");
+    const rows = selectedData
+      .map((row) => colDefs.map((col) => row[col.field]).join("\t"))
+      .join("\n");
+
+    const finalText = `${headers}\n${rows}`;
+    navigator.clipboard.writeText(finalText);
+  };
+
+  const handlePasteRows = async () => {
+    const text = await navigator.clipboard.readText();
+    // const rows = text.trim().split("\n").slice(1); // 첫 줄은 헤더니까 제외
+    const rows = text.trim().split("\n");
+
+    const parsedRows = rows.map((row) => row.split("\t"));
+
+    const focused = gridRef.current.api.getFocusedCell();
+    const startRow = focused?.rowIndex || 0;
+    const startCol = colDefs.findIndex(
+      (col) => col.field === focused?.column?.getColId()
+    );
+
+    parsedRows.forEach((values, rowOffset) => {
+      const rowNode = gridRef.current.api.getDisplayedRowAtIndex(
+        startRow + rowOffset
+      );
+      if (!rowNode) return;
+
+      values.forEach((value, colOffset) => {
+        const targetCol = colDefs[startCol + colOffset];
+        if (!targetCol) return;
+
+        // 붙여넣기 허용 필드만 적용하거나 무조건 적용
+        rowNode.setDataValue(targetCol.field, value);
+      });
+    });
+  };
 
   // useEffect(() => {
   //   fetch("https://www.ag-grid.com/example-assets/space-mission-data.json") // Fetch data from server
@@ -169,35 +314,37 @@ export default function Assets() {
 
   useEffect(() => {
     const keyHandler = (e) => {
-      // 복사 (셀/범위/행 자동 분기)
       if (e.ctrlKey && e.key === "c") {
         e.preventDefault();
-        copySelection(gridRef, colDefs, range);
+
+        if (range?.start && range?.end) {
+          handleCopyRange();
+        } else if (range?.start) {
+          handleCopyCell();
+        } else {
+          handleCopyRows();
+        }
       }
-      // 붙여넣기
+
       if (e.ctrlKey && e.key === "v") {
-        const editing = gridRef.current.api.getEditingCells();
-        if (editing.length) return; // 셀 편집 중엔 브라우저 기본 붙여넣기
-        e.preventDefault();
-        pasteSelection(gridRef, colDefs);
-      }
-      // 실행 취소 (Undo)
-      if (e.ctrlKey && e.key === "z") {
-        e.preventDefault();
-        undoSelection(gridRef);
+        const editingCells = gridRef.current.api.getEditingCells();
+        if (editingCells.length > 0) return; // 셀 편집 중이면 붙여넣기 막지 않음
+
+        e.preventDefault(); // 붙여넣기 기본 막기
+        handlePasteRows(); // 붙여넣기 처리 실행
       }
     };
 
-    const handleMouseUp = () => setDragging(false);
+    const up = () => setDragging(false);
 
     window.addEventListener("keydown", keyHandler);
-    window.addEventListener("mouseup", handleMouseUp);
+    window.addEventListener("mouseup", up);
 
     return () => {
       window.removeEventListener("keydown", keyHandler);
-      window.removeEventListener("mouseup", handleMouseUp);
+      window.removeEventListener("mouseup", up);
     };
-  }, [range, colDefs]);
+  }, [range]);
 
   const getStatusBadge = (status) => {
     switch (status) {
@@ -314,34 +461,24 @@ export default function Assets() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div
-                style={{ width: "100%", height: "100%" }}
-                onContextMenu={(e) => e.preventDefault()}
-              >
+              <div className={{ width: "100%", height: "100%" }}>
                 <AgGridReact
                   ref={gridRef}
                   theme={themeBalham}
-                  rowData={rowData}
-                  columnDefs={colDefs}
                   domLayout="autoHeight"
-                  pagination={true}
-                  defaultColDef={defaultColDef}
-                  rowSelection={rowSelection}
                   onCellClicked={onCellClicked} // Shift+클릭 방식 유지
                   onCellMouseDown={onCellMouseDown} // 드래그 시작
                   onCellMouseOver={onCellMouseOver} // 드래그 중
-                  onCellContextMenu={handleContextMenu}
-                  suppressContextMenu={true}
+                  defaultColDef={defaultColDef}
+                  rowSelection={rowSelection}
+                  pagination={true}
+                  rowData={rowData}
+                  columnDefs={colDefs}
                 />
-                <ContextMenuComponent />
               </div>
             </CardContent>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleCopyAll(gridRef)}
-            >
-              전체 복사
+            <Button variant="outline" size="sm" onClick={handleCopyAll}>
+              복사
             </Button>
           </Card>
         </TabsContent>
